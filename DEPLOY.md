@@ -7,7 +7,7 @@ index.html          ← the full app (served by Vercel as the frontend)
 api/upload.js       ← serverless function: pushes files to GitHub
 api/files.js        ← serverless function: lists files from GitHub
 vercel.json         ← Vercel routing config
-package.json        ← Node 18 config
+package.json        ← Node 24 config
 ```
 
 ---
