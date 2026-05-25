@@ -305,32 +305,75 @@ function UploadSheet({onClose,onDone,mobile}){
   const doUp=async()=>{
     if(!file||!cat)return;
     setPhase('up');setProg(0);
-    // 50 MB cap for GitHub Contents API
-    if(file.size>50*1024*1024){
-      alert('File too large (max 50 MB). For bigger videos use GitHub Releases.');
-      setPhase('idle');return;
-    }
     try{
-      // 1. Read file as base64
-      const base64=await new Promise((res,rej)=>{
-        const r=new FileReader();
-        r.onload=e=>{setProg(35);res(e.target.result.split(',')[1]);};
-        r.onerror=rej;
-        r.readAsDataURL(file);
-      });
-      setProg(55);
-      // 2. Push to GitHub via serverless function
-      const resp=await fetch('/api/upload',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({filename:file.name,content:base64,album:cat,title:title||file.name.replace(/\.[^/.]+$/,''),fileType:file.type}),
-      });
-      setProg(90);
-      const data=await resp.json();
-      if(!resp.ok)throw new Error(data.error||'Upload failed');
-      setProg(100);
-      setPhase('done');
-      setTimeout(()=>{onDone(data.url);onClose();},1200);
+      const SMALL_MAX=3*1024*1024; // stay under Vercel ~4.5MB payload limit
+
+      if(file.size<=SMALL_MAX){
+        // Small files: single request -> GitHub Contents API
+        const base64=await new Promise((res,rej)=>{
+          const r=new FileReader();
+          r.onload=e=>{setProg(35);res(e.target.result.split(',')[1]);};
+          r.onerror=rej;
+          r.readAsDataURL(file);
+        });
+        setProg(55);
+
+        const resp=await fetch('/api/upload',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({filename:file.name,content:base64,album:cat,title:file.name.replace(/\.[^/.]+$/,''),fileType:file.type}),
+        });
+        setProg(90);
+        const data=await resp.json();
+        if(!resp.ok)throw new Error(data.error||'Upload failed');
+        setProg(100);
+        setPhase('done');
+        setTimeout(()=>{onDone(data.url);onClose();},1200);
+
+      }else{
+        // Large files: chunked uploads -> GitHub repo /chunks -> GitHub Action assembles -> GitHub Release asset
+        const chunkSize=3*1024*1024;
+        const totalChunks=Math.ceil(file.size/chunkSize);
+        const uploadId=`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+        for(let i=0;i<totalChunks;i++){
+          const start=i*chunkSize;
+          const end=Math.min(file.size,(i+1)*chunkSize);
+          const blob=file.slice(start,end);
+
+          const base64=await new Promise((res,rej)=>{
+            const r=new FileReader();
+            r.onload=e=>res(e.target.result.split(',')[1]);
+            r.onerror=rej;
+            r.readAsDataURL(blob);
+          });
+
+          const resp=await fetch('/api/upload-chunk',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              uploadId,album:cat,filename:file.name,fileType:file.type,
+              chunkIndex:i,totalChunks,content:base64,
+              size:file.size,lastModified:file.lastModified,
+            }),
+          });
+          const data=await resp.json();
+          if(!resp.ok)throw new Error(data.error||'Chunk upload failed');
+          setProg(5+((i+1)/totalChunks)*85);
+        }
+
+        const fin=await fetch('/api/upload-chunk',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({uploadId,album:cat,filename:file.name,fileType:file.type,chunkIndex:0,totalChunks,finalize:true,size:file.size,lastModified:file.lastModified}),
+        });
+        const data=await fin.json();
+        if(!fin.ok)throw new Error(data.error||'Finalize failed');
+
+        setProg(100);
+        setPhase('done');
+        setTimeout(()=>{onDone(data.expectedUrl||'');onClose();},1200);
+      }
     }catch(err){
       setPhase('idle');
       alert('Upload error: '+err.message);

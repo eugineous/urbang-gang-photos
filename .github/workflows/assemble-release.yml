@@ -1,0 +1,90 @@
+name: Assemble chunked uploads
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "chunks/**/manifest.json"
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find manifests in this push
+        id: manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-status "${{ github.event.before }}" "${{ github.sha }}" \
+            | grep -E '^[AM]\s+chunks/.+/manifest\.json$' \
+            | awk '{print $2}' > manifests.txt || true
+          if [[ ! -s manifests.txt ]]; then
+            echo "none=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "none=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Assemble and upload to Releases
+        if: steps.manifests.outputs.none != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          TAG="ugc"
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" -t "Urban Gang Moments Uploads" -n "Auto-uploaded media" --latest=false
+
+          while read -r manifest; do
+            dir="$(dirname "$manifest")"
+            album="$(jq -r '.album' "$manifest")"
+            filename="$(jq -r '.filename' "$manifest")"
+            total="$(jq -r '.totalChunks' "$manifest")"
+            createdAt="$(jq -r '.createdAt' "$manifest")"
+
+            safe_album="$(echo "$album" | tr -cs 'a-zA-Z0-9._-' '_' | cut -c1-80)"
+            safe_file="$(echo "$filename" | tr -cs 'a-zA-Z0-9._-' '_' | cut -c1-120)"
+
+            out="release-${safe_album}--${createdAt}--${safe_file}"
+            rm -f "$out"
+
+            i=0
+            while [[ "$i" -lt "$total" ]]; do
+              part="$(printf "%06d.part" "$i")"
+              cat "$dir/$part" >> "$out"
+              i=$((i+1))
+            done
+
+            gh release upload "$TAG" "$out" --clobber
+
+            rm -f "$out"
+          done < manifests.txt
+
+      - name: Cleanup chunk files (best effort)
+        if: steps.manifests.outputs.none != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          while read -r manifest; do
+            dir="$(dirname "$manifest")"
+            rm -rf "$dir"
+          done < manifests.txt
+
+          if git status --porcelain | grep -q .; then
+            git add -A
+            git commit -m "chore: cleanup chunk parts"
+            git push
+          else
+            echo "Nothing to clean"
+          fi
