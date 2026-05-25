@@ -81,6 +81,7 @@ Vercel: https://vercel.com/account/tokens
 
 ## How uploads work
 
-Small files upload → `/api/upload` → pushed to `eugineous/urbang-gang-photos/media/{album}/`.
-Large files are uploaded in chunks via `/api/upload-chunk` (to bypass Vercel’s request size limit) and are assembled by a GitHub Action into a GitHub Release asset (tag: `ugc`).
-All files stay at original quality. Downloads use GitHub raw URLs (small) or GitHub Releases download URLs (large).
+Files upload → `/api/upload` → pushed to `eugineous/urbang-gang-photos/media/{album}/`
+Files are stored at original quality. Direct GitHub raw URLs used for downloads.
+Max file size via GitHub Contents API: **50 MB**.
+For larger videos: use GitHub Releases (contact developer to enable).
