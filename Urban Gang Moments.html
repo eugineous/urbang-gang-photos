@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#C4178A">
+<title>Urban Gang Moments</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Barlow+Condensed:wght@700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;height:-webkit-fill-available}
+body{height:100%;height:-webkit-fill-available;background:#0C0B10;color:#F2EEF8;font-family:'Space Grotesk',sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+#root{height:100%;display:flex;flex-direction:column}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+input,select,textarea{font-family:inherit}
+img{-webkit-user-drag:none;user-select:none}
+::-webkit-scrollbar{display:none}
+*{scrollbar-width:none;-ms-overflow-style:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
+@keyframes splashOut{0%{opacity:1}80%{opacity:1}100%{opacity:0;pointer-events:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes toastSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo,useRef,useCallback}=React;
+
+/* ─── TOKENS ─── */
+const BG='#0C0B10', S1='#131219', S2='#1A1826', S3='#22202E', S4='#2C2A3A';
+const PINK='#C4178A', ORA='#F5921E', WHI='#FFFFFF', BLK='#080508';
+const T='#F2EEF8', TM='rgba(242,238,248,0.5)', TD='rgba(242,238,248,0.22)';
+
+/* ─── CINEMATIC GRADIENTS ─── */
+const GR=[
+  'linear-gradient(155deg,#1A0806,#5E1A06,#A83810)',
+  'linear-gradient(155deg,#050814,#140C38,#3A1E7C)',
+  'linear-gradient(155deg,#1E0808,#701040,#BC1880)',
+  'linear-gradient(155deg,#061008,#183818,#2E5E2E)',
+  'linear-gradient(155deg,#1A1006,#5A3818,#9E6820)',
+  'linear-gradient(155deg,#06060E,#101028,#1E2060)',
+  'linear-gradient(155deg,#180806,#661608,#BC2E18)',
+  'linear-gradient(155deg,#060A1A,#161E5A,#2A3E82)',
+  'linear-gradient(155deg,#060C06,#141E14,#263826)',
+  'linear-gradient(155deg,#100806,#3C1E10,#7A5020)',
+  'linear-gradient(155deg,#040A10,#0E1836,#1A2C68)',
+  'linear-gradient(155deg,#140610,#480E3E,#8C186C)',
+  'linear-gradient(155deg,#041010,#0C2A28,#184644)',
+  'linear-gradient(155deg,#100606,#380A0A,#6C1010)',
+  'linear-gradient(155deg,#100C04,#3C2808,#785A10)',
+];
+
+/* ─── DATA ─── */
+const ALBUMS=[
+  {id:'koinange', name:'SNR. Chief Koinange Girls', date:'30TH.MAY 2025', count:11, g:2},
+  {id:'loreto',   name:'Loreto Kiambu Girls High',  date:'1ST.JUNE 2025', count:14, g:0},
+  {id:'gathirimu',name:'Gathirimu Girls Tech. High', date:'4TH.JULY 2025', count:9,  g:8},
+  {id:'bts',      name:'Behind The Scenes',          date:'All Events',    count:8,  g:6},
+  {id:'portraits',name:'Portraits',                  date:'All Events',    count:6,  g:10},
+];
+
+const ITEMS=[
+  {id:1, type:'photo',album:'loreto',   title:'Opening Ceremony',    by:'Kevo',        sz:'4.2 MB', h:280,g:0},
+  {id:2, type:'video',album:'loreto',   title:'Dance Performance',   by:'Aisha M.',    sz:'128 MB', h:195,g:1,dur:'2:34'},
+  {id:3, type:'photo',album:'koinange', title:'Squad Goals',         by:'Marcus',      sz:'6.8 MB', h:260,g:2},
+  {id:4, type:'raw',  album:'loreto',   title:'Portrait Raw',        by:'Photographer',sz:'24.1 MB',h:315,g:3},
+  {id:5, type:'video',album:'koinange', title:'Crowd Energy',        by:'Kevo',        sz:'256 MB', h:185,g:4,dur:'1:12'},
+  {id:6, type:'photo',album:'gathirimu',title:'Award Ceremony',      by:'Diana K.',    sz:'5.1 MB', h:250,g:5},
+  {id:7, type:'photo',album:'bts',      title:'Pre-show Setup',      by:'Tony',        sz:'3.7 MB', h:205,g:6},
+  {id:8, type:'photo',album:'loreto',   title:'Show Highlight',      by:'Kevo',        sz:'7.2 MB', h:348,g:7},
+  {id:9, type:'video',album:'gathirimu',title:'Full Show — 4K',      by:'Amara',       sz:'2.1 GB', h:215,g:8,dur:'45:20'},
+  {id:10,type:'photo',album:'koinange', title:'Backstage Vibes',     by:'Marcus',      sz:'4.9 MB', h:175,g:9},
+  {id:11,type:'photo',album:'portraits',title:'Team Member Shots',   by:'Diana K.',    sz:'8.3 MB', h:294,g:10},
+  {id:12,type:'raw',  album:'gathirimu',title:'Raw Footage Pack',    by:'Photographer',sz:'512 MB', h:252,g:11},
+  {id:13,type:'photo',album:'bts',      title:'Sound Check',         by:'Tony',        sz:'2.1 MB', h:198,g:12},
+  {id:14,type:'video',album:'koinange', title:'Highlight Reel',      by:'Kevo',        sz:'340 MB', h:268,g:13,dur:'3:45'},
+  {id:15,type:'photo',album:'gathirimu',title:'Audience Fire',       by:'Aisha M.',    sz:'5.8 MB', h:176,g:14},
+  {id:16,type:'photo',album:'loreto',   title:'Closing Performance', by:'Marcus',      sz:'6.4 MB', h:305,g:3},
+  {id:17,type:'raw',  album:'portraits',title:'Individual Portraits',by:'Photographer',sz:'89 MB',  h:280,g:5},
+  {id:18,type:'video',album:'bts',      title:'Making-Of',           by:'Tony',        sz:'890 MB', h:200,g:7,dur:'12:05'},
+  {id:19,type:'photo',album:'loreto',   title:'Energy Shot',         by:'Kevo',        sz:'4.1 MB', h:232,g:8},
+  {id:20,type:'photo',album:'koinange', title:'Group Hug Moment',    by:'Diana K.',    sz:'3.9 MB', h:264,g:9},
+];
+
+/* ─── HOOKS ─── */
+function useBP(){
+  const [w,setW]=useState(()=>window.innerWidth);
+  useEffect(()=>{const h=()=>setW(window.innerWidth);window.addEventListener('resize',h,{passive:true});return()=>window.removeEventListener('resize',h);},[]);
+  return{mobile:w<640,desk:w>=1024,w};
+}
+
+/* ─── ICONS ─── */
+function Ico({n,s=20,c='currentColor'}){
+  const D={
+    home:<><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" strokeWidth="2"/><polyline points="9 22 9 12 15 12 15 22" strokeWidth="2"/></>,
+    albums:<><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" strokeWidth="2" strokeLinejoin="round"/></>,
+    upload:<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>,
+    info:<><circle cx="12" cy="12" r="10" strokeWidth="2"/><line x1="12" y1="16" x2="12" y2="12" strokeWidth="2" strokeLinecap="round"/><line x1="12" y1="8" x2="12.01" y2="8" strokeWidth="2.5" strokeLinecap="round"/></>,
+    download:<path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4 4 4-4M12 3v13" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>,
+    close:<path d="M18 6L6 18M6 6l12 12" strokeWidth="2.2" strokeLinecap="round"/>,
+    back:<path d="M19 12H5M12 5l-7 7 7 7" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>,
+    check:<path d="M20 6L9 17l-5-5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>,
+    play:<polygon points="10 8 16 12 10 16 10 8" fill="currentColor" strokeWidth="0"/>,
+    search:<><circle cx="11" cy="11" r="8" strokeWidth="2"/><path d="M21 21l-4.35-4.35" strokeWidth="2.2" strokeLinecap="round"/></>,
+    left:<path d="M15 18l-6-6 6-6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>,
+    right:<path d="M9 18l6-6-6-6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>,
+    share:<path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>,
+    github:<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>,
+    plus:<path d="M12 5v14M5 12h14" strokeWidth="2.5" strokeLinecap="round"/>,
+    zip:<><rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2"/><path d="M12 8v8m-3-4h6" strokeWidth="2" strokeLinecap="round"/></>,
+    camera:<><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" strokeWidth="2" strokeLinejoin="round"/><circle cx="12" cy="13" r="4" strokeWidth="2"/></>,
+  };
+  return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} style={{display:'block',flexShrink:0}}>{D[n]}</svg>;
+}
+
+/* ─── BADGE ─── */
+function Badge({type}){
+  const v={
+    photo:{l:'PHOTO',c:'#FF80D4',bg:'rgba(196,23,138,0.28)',bd:'rgba(196,23,138,0.6)'},
+    video:{l:'VIDEO',c:'#FFB86A',bg:'rgba(245,146,30,0.25)',bd:'rgba(245,146,30,0.55)'},
+    raw:  {l:'RAW',  c:'#CC80FF',bg:'rgba(123,45,139,0.25)',bd:'rgba(123,45,139,0.55)'},
+  }[type]||{l:'FILE',c:'#aaa',bg:'#222',bd:'#333'};
+  return <span style={{display:'inline-block',padding:'2px 7px',borderRadius:4,fontSize:9,fontWeight:900,letterSpacing:'0.12em',fontFamily:"'Barlow Condensed',sans-serif",color:v.c,background:v.bg,border:`1px solid ${v.bd}`}}>{v.l}</span>;
+}
+
+/* ─── SPLASH ─── */
+function Splash({onDone}){
+  const [out,setOut]=useState(false);
+  useEffect(()=>{
+    const t1=setTimeout(()=>setOut(true),1400);
+    const t2=setTimeout(onDone,1900);
+    return()=>{clearTimeout(t1);clearTimeout(t2);};
+  },[]);
+  return(
+    <div style={{position:'fixed',inset:0,background:PINK,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',zIndex:9999,transition:'opacity 0.5s ease',opacity:out?0:1,pointerEvents:out?'none':'all'}}>
+      <img src="uploads/URBAN GANG TOUR OFFICIAL LOGO.png" style={{width:200,height:'auto',marginBottom:20,animation:'scaleIn 0.5s ease'}} alt="Urban Gang"/>
+      <div style={{display:'flex',alignItems:'center',gap:8,animation:'fadeUp 0.5s 0.3s ease both'}}>
+        <span style={{fontFamily:"'Lilita One',cursive",fontSize:28,color:ORA}}>GANG</span>
+        <span style={{fontFamily:"'Lilita One',cursive",fontSize:28,color:WHI}}>MOMENTS</span>
+      </div>
+      <div style={{marginTop:32,width:48,height:3,borderRadius:2,background:'rgba(255,255,255,0.25)',overflow:'hidden',animation:'fadeIn 0.4s 0.5s ease both'}}>
+        <div style={{height:'100%',background:WHI,borderRadius:2,animation:'loadBar 1.2s 0.5s ease forwards'}}/>
+      </div>
+      <style>{`@keyframes loadBar{from{width:0}to{width:100%}}`}</style>
+    </div>
+  );
+}
+
+/* ─── MEDIA CARD (grid item) ─── */
+function GridCard({item,onOpen,selected,onSelect,bulk}){
+  const [hov,setHov]=useState(false);
+  return(
+    <div style={{breakInside:'avoid',marginBottom:8,cursor:'pointer',borderRadius:10,overflow:'hidden',position:'relative',
+      outline:selected?`2px solid ${ORA}`:'none',
+      boxShadow:hov?`0 0 0 1px rgba(196,23,138,0.4),0 6px 20px rgba(0,0,0,0.5)`:'none',
+      transition:'box-shadow 0.18s',
+    }}
+      onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      onClick={()=>bulk?onSelect(item.id):onOpen(item)}>
+      <div style={{aspectRatio:'none',height:item.h*0.72,background:GR[item.g],position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0) 40%,rgba(0,0,0,0.65) 100%)'}}/>
+        {item.type==='video'&&(
+          <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <div style={{width:40,height:40,borderRadius:'50%',background:'rgba(0,0,0,0.6)',backdropFilter:'blur(6px)',display:'flex',alignItems:'center',justifyContent:'center',paddingLeft:3,border:'1.5px solid rgba(255,255,255,0.3)'}}>
+              <Ico n="play" s={16} c="#fff"/>
+            </div>
+          </div>
+        )}
+        {item.type==='video'&&item.dur&&<span style={{position:'absolute',bottom:8,right:8,background:'rgba(0,0,0,0.75)',color:WHI,fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:800,padding:'2px 6px',borderRadius:4}}>{item.dur}</span>}
+        {item.type==='raw'&&(
+          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,fontWeight:900,letterSpacing:'0.2em',color:'rgba(255,255,255,0.4)',marginBottom:4}}>RAW FILE</div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:18,fontWeight:900,color:'rgba(255,255,255,0.75)'}}>{item.sz}</div>
+          </div>
+        )}
+        <div style={{position:'absolute',top:6,left:6}}><Badge type={item.type}/></div>
+        {bulk&&(
+          <div style={{position:'absolute',top:8,right:8,width:22,height:22,borderRadius:5,background:selected?ORA:'rgba(0,0,0,0.6)',border:`2px solid ${selected?ORA:'rgba(255,255,255,0.4)'}`,display:'flex',alignItems:'center',justifyContent:'center',backdropFilter:'blur(4px)'}}>
+            {selected&&<Ico n="check" s={11} c="#fff"/>}
+          </div>
+        )}
+      </div>
+      <div style={{background:S2,padding:'7px 10px 8px',borderTop:'1.5px solid rgba(245,146,30,0.15)'}}>
+        <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:12,letterSpacing:'0.04em',color:T,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',textTransform:'uppercase',lineHeight:1.2}}>{item.title}</div>
+        <div style={{fontSize:9,color:TM,marginTop:3,display:'flex',justifyContent:'space-between'}}>
+          <span>{item.by}</span><span>{item.sz}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── ALBUM CARD ─── */
+function AlbumCard({album,onOpen}){
+  const [hov,setHov]=useState(false);
+  return(
+    <div onClick={()=>onOpen(album)} style={{cursor:'pointer',borderRadius:14,overflow:'hidden',background:S2,
+      transform:hov?'scale(1.02)':'scale(1)',
+      boxShadow:hov?`0 0 0 2px ${PINK},0 12px 32px rgba(0,0,0,0.5)`:'0 4px 16px rgba(0,0,0,0.4)',
+      transition:'transform 0.2s,box-shadow 0.2s',animation:'fadeUp 0.3s ease both',
+    }}
+      onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>
+      {/* Cover */}
+      <div style={{height:140,background:GR[album.g],position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,rgba(0,0,0,0) 40%,rgba(0,0,0,0.75) 100%)'}}/>
+        <div style={{position:'absolute',bottom:12,left:14,right:14}}>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:16,textTransform:'uppercase',letterSpacing:'0.04em',color:WHI,lineHeight:1.15,textShadow:'0 2px 8px rgba(0,0,0,0.8)'}}>{album.name}</div>
+        </div>
+      </div>
+      {/* Footer */}
+      <div style={{padding:'10px 14px 12px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,color:PINK,letterSpacing:'0.05em'}}>{album.date}</span>
+        <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:900,color:TD,letterSpacing:'0.08em'}}>{album.count} MOMENTS</span>
+      </div>
+    </div>
+  );
+}
+
+/* ─── LIGHTBOX ─── */
+function Lightbox({items,idx,onClose,onNav,mobile}){
+  const item=items[idx];
+  const alb=ALBUMS.find(a=>a.id===item.album);
+  const touch=useRef({x:0});
+  useEffect(()=>{
+    const h=e=>{if(e.key==='Escape')onClose();if(e.key==='ArrowLeft')onNav(-1);if(e.key==='ArrowRight')onNav(1);};
+    window.addEventListener('keydown',h);return()=>window.removeEventListener('keydown',h);
+  },[onClose,onNav]);
+  const onTS=e=>touch.current.x=e.touches[0].clientX;
+  const onTE=e=>{const dx=e.changedTouches[0].clientX-touch.current.x;if(Math.abs(dx)>50)onNav(dx>0?-1:1);};
+  return(
+    <div style={{position:'fixed',inset:0,background:'rgba(4,3,8,0.98)',zIndex:5000,display:'flex',flexDirection:'column',animation:'fadeIn 0.18s ease'}}
+      onTouchStart={onTS} onTouchEnd={onTE}>
+      {/* Header */}
+      <div style={{padding:mobile?'12px 16px':'14px 20px',display:'flex',alignItems:'center',gap:12,flexShrink:0,borderBottom:'1px solid rgba(255,255,255,0.07)',background:'rgba(10,8,20,0.9)',backdropFilter:'blur(12px)'}}>
+        <button onClick={onClose} style={{display:'flex',alignItems:'center',justifyContent:'center',width:40,height:40,color:TM}}><Ico n="close" s={22}/></button>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:mobile?14:16,textTransform:'uppercase',letterSpacing:'0.04em',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{item.title}</div>
+          <div style={{fontSize:10,color:TM,marginTop:1}}>{alb?.name} · {item.by} · {item.sz}</div>
+        </div>
+        <Badge type={item.type}/>
+      </div>
+      {/* Image */}
+      <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',padding:mobile?12:'24px 80px',overflow:'hidden'}}>
+        <div style={{
+          background:GR[item.g],borderRadius:12,
+          width:mobile?'100%':Math.min(820,item.h*1.5),
+          height:mobile?undefined:Math.min(560,item.h*1.35),
+          aspectRatio:mobile?'4/3':undefined,
+          display:'flex',alignItems:'center',justifyContent:'center',
+          position:'relative',overflow:'hidden',animation:'scaleIn 0.2s ease',
+          boxShadow:`0 0 0 1px rgba(196,23,138,0.18),0 ${mobile?24:64}px ${mobile?40:120}px rgba(0,0,0,0.85)`,
+        }}>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.4))'}}/>
+          {item.type==='video'&&(
+            <div style={{position:'relative',width:mobile?56:72,height:mobile?56:72,borderRadius:'50%',background:'rgba(0,0,0,0.65)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',paddingLeft:4,border:'2px solid rgba(255,255,255,0.25)'}}>
+              <Ico n="play" s={mobile?24:30} c="#fff"/>
+            </div>
+          )}
+          {item.type==='raw'&&(
+            <div style={{position:'relative',textAlign:'center'}}>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:mobile?20:26,letterSpacing:'0.1em',color:'rgba(255,255,255,0.85)',marginBottom:6}}>RAW FILE</div>
+              <div style={{fontSize:12,color:'rgba(255,255,255,0.5)'}}>{item.sz} · Original quality</div>
+            </div>
+          )}
+        </div>
+        {!mobile&&[{d:-1,p:'left',n:'left'},{d:1,p:'right',n:'right'}].map(({d,p,n})=>(
+          <button key={p} onClick={()=>onNav(d)} style={{position:'absolute',[p]:16,width:48,height:48,borderRadius:'50%',background:'rgba(20,16,38,0.85)',backdropFilter:'blur(8px)',border:'1px solid rgba(196,23,138,0.22)',color:T,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'background 0.15s'}}
+            onMouseEnter={e=>e.currentTarget.style.background='rgba(196,23,138,0.3)'}
+            onMouseLeave={e=>e.currentTarget.style.background='rgba(20,16,38,0.85)'}>
+            <Ico n={n} s={20}/>
+          </button>
+        ))}
+      </div>
+      {/* Footer */}
+      <div style={{padding:mobile?'12px 16px calc(12px + env(safe-area-inset-bottom))':'12px 20px',display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid rgba(255,255,255,0.06)',flexShrink:0}}>
+        <span style={{fontSize:12,color:TD}}>{idx+1} / {items.length}{!mobile&&' · ← → navigate · ESC close'}</span>
+        <button style={{background:`linear-gradient(90deg,${PINK},${ORA})`,color:WHI,border:'none',borderRadius:24,padding:mobile?'11px 22px':'10px 22px',fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:900,cursor:'pointer',display:'flex',alignItems:'center',gap:6,letterSpacing:'0.06em',textTransform:'uppercase',minHeight:44}}>
+          <Ico n="download" s={14} c="#fff"/>DOWNLOAD
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── UPLOAD SHEET ─── */
+function UploadSheet({onClose,onDone,mobile}){
+  const [phase,setPhase]=useState('idle');
+  const [prog,setProg]=useState(0);
+  const [cat,setCat]=useState('');
+  const [drag,setDrag]=useState(false);
+  const [file,setFile]=useState(null);
+  const pick=f=>{setFile(f);};
+  const doUp=async()=>{
+    if(!file||!cat)return;
+    setPhase('up');setProg(0);
+    // 50 MB cap for GitHub Contents API
+    if(file.size>50*1024*1024){
+      alert('File too large (max 50 MB). For bigger videos use GitHub Releases.');
+      setPhase('idle');return;
+    }
+    try{
+      // 1. Read file as base64
+      const base64=await new Promise((res,rej)=>{
+        const r=new FileReader();
+        r.onload=e=>{setProg(35);res(e.target.result.split(',')[1]);};
+        r.onerror=rej;
+        r.readAsDataURL(file);
+      });
+      setProg(55);
+      // 2. Push to GitHub via serverless function
+      const resp=await fetch('/api/upload',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({filename:file.name,content:base64,album:cat,title:title||file.name.replace(/\.[^/.]+$/,''),fileType:file.type}),
+      });
+      setProg(90);
+      const data=await resp.json();
+      if(!resp.ok)throw new Error(data.error||'Upload failed');
+      setProg(100);
+      setPhase('done');
+      setTimeout(()=>{onDone(data.url);onClose();},1200);
+    }catch(err){
+      setPhase('idle');
+      alert('Upload error: '+err.message);
+    }
+  };
+  const fmtSz=b=>{if(!b)return'';const m=b/(1024*1024);return m<1?`${(b/1024).toFixed(0)} KB`:`${m.toFixed(1)} MB`;};
+  return(
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',backdropFilter:'blur(12px)',zIndex:4000,display:'flex',alignItems:'flex-end',justifyContent:'center',animation:'fadeIn 0.2s ease'}}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{
+        background:S1,borderRadius:'22px 22px 0 0',
+        padding:`24px 20px calc(24px + env(safe-area-inset-bottom))`,
+        width:'100%',maxWidth:520,
+        maxHeight:'92dvh',overflowY:'auto',
+        animation:'slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+        boxShadow:'0 -8px 40px rgba(0,0,0,0.6)',
+        border:'1px solid rgba(255,255,255,0.07)',
+      }}>
+        <div style={{width:36,height:4,borderRadius:2,background:S4,margin:'0 auto 20px'}}/>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:22}}>
+          <div style={{fontFamily:"'Lilita One',cursive",fontSize:20,color:T}}>
+            Add your <span style={{color:PINK}}>shot</span>
+          </div>
+          <button onClick={onClose} style={{width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',color:TM}}><Ico n="close" s={20}/></button>
+        </div>
+
+        {phase==='done'?(
+          <div style={{textAlign:'center',padding:'32px 0',animation:'fadeUp 0.3s ease'}}>
+            <div style={{width:60,height:60,borderRadius:'50%',background:`linear-gradient(135deg,${PINK},${ORA})`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px'}}>
+              <Ico n="check" s={26} c="#fff"/>
+            </div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:20,letterSpacing:'0.04em',marginBottom:6}}>PUSHED TO GITHUB</div>
+            <div style={{fontSize:12,color:TM}}>Original quality preserved</div>
+          </div>
+        ):phase==='up'?(
+          <div style={{padding:'12px 0',animation:'fadeIn 0.2s ease'}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
+              <span style={{fontWeight:600,fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'80%'}}>{file?.name}</span>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:15,color:ORA}}>{Math.round(prog)}%</span>
+            </div>
+            <div style={{background:S3,borderRadius:4,height:5,overflow:'hidden',marginBottom:10}}>
+              <div style={{height:'100%',background:`linear-gradient(90deg,${PINK},${ORA})`,width:`${prog}%`,borderRadius:4,transition:'width 0.18s'}}/>
+            </div>
+            <div style={{fontSize:11,color:TM,display:'flex',alignItems:'center',gap:6}}>
+              <div style={{animation:'spin 1s linear infinite',display:'flex'}}><Ico n="github" s={11} c={TM}/></div>
+              Pushing to GitHub…
+            </div>
+          </div>
+        ):(
+          <>
+            <div
+              style={{border:`2px dashed ${drag?PINK:file?ORA:'rgba(255,255,255,0.1)'}`,borderRadius:14,padding:'30px 16px',textAlign:'center',marginBottom:16,background:drag?'rgba(196,23,138,0.07)':file?'rgba(245,146,30,0.06)':'rgba(255,255,255,0.02)',transition:'all 0.18s',cursor:'pointer',minHeight:120,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8}}
+              onDragOver={e=>{e.preventDefault();setDrag(true)}} onDragLeave={()=>setDrag(false)}
+              onDrop={e=>{e.preventDefault();setDrag(false);const f=e.dataTransfer.files[0];if(f)pick(f);}}
+              onClick={()=>document.getElementById('_uf').click()}
+            >
+              <input id="_uf" type="file" style={{display:'none'}} onChange={e=>{const f=e.target.files[0];if(f)pick(f);}} accept="image/*,video/*,.raw,.cr2,.nef,.arw,.dng,audio/*,.pdf"/>
+              {file?(
+                <>
+                  <div style={{fontSize:36}}>{file.type.startsWith('video')?'🎬':file.type.startsWith('image')?'📸':'📁'}</div>
+                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:14,textTransform:'uppercase',letterSpacing:'0.04em',wordBreak:'break-all',textAlign:'center'}}>{file.name}</div>
+                  <div style={{fontSize:11,color:TM}}>{fmtSz(file.size)} · Tap to change</div>
+                </>
+              ):(
+                <>
+                  <Ico n="camera" s={36} c={PINK}/>
+                  <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,fontWeight:900,letterSpacing:'0.05em'}}>TAP TO ADD PHOTO OR VIDEO</div>
+                  <div style={{fontSize:11,color:TM}}>Photos · Videos · 4K · RAW · Audio · Docs</div>
+                </>
+              )}
+            </div>
+
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <select value={cat} onChange={e=>setCat(e.target.value)}
+                style={{width:'100%',background:S2,border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,padding:'12px 14px',color:cat?T:TD,fontSize:14,outline:'none',cursor:'pointer'}}>
+                <option value="" disabled>Select school or album…</option>
+                {ALBUMS.map(a=><option key={a.id} value={a.id}>{a.name} — {a.date}</option>)}
+                <option value="__new">+ Create new album…</option>
+              </select>
+              <button onClick={doUp} disabled={!file||!cat}
+                style={{background:file&&cat?`linear-gradient(90deg,${PINK},${ORA})`:'rgba(255,255,255,0.06)',color:file&&cat?WHI:'rgba(255,255,255,0.2)',border:'none',borderRadius:14,padding:'14px',fontFamily:"'Barlow Condensed',sans-serif",fontSize:16,fontWeight:900,cursor:file&&cat?'pointer':'not-allowed',letterSpacing:'0.08em',textTransform:'uppercase',transition:'all 0.2s',minHeight:52}}>
+                UPLOAD ↗
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── SCREENS ─── */
+function HomeScreen({onOpen,selected,onSelect,bulk,mobile}){
+  const cols=mobile?2:3;
+  return(
+    <div style={{flex:1,overflowY:'auto',padding:mobile?'12px 12px 0':'16px 20px 0'}}>
+      <div style={{columns:cols,columnGap:mobile?8:10}}>
+        {ITEMS.map(item=><GridCard key={item.id} item={item} onOpen={onOpen} selected={selected.has(item.id)} onSelect={onSelect} bulk={bulk}/>)}
+      </div>
+      <div style={{height:mobile?100:60}}/>
+    </div>
+  );
+}
+
+function AlbumsScreen({onOpenAlbum,mobile}){
+  const cols=mobile?2:3;
+  return(
+    <div style={{flex:1,overflowY:'auto',padding:mobile?'12px 12px 0':'16px 20px 0'}}>
+      <div style={{display:'grid',gridTemplateColumns:`repeat(${cols},1fr)`,gap:mobile?10:14}}>
+        {ALBUMS.map((alb,i)=><AlbumCard key={alb.id} album={alb} onOpen={onOpenAlbum}/>)}
+      </div>
+      <div style={{height:mobile?100:60}}/>
+    </div>
+  );
+}
+
+function AlbumDetailScreen({albumId,onBack,onOpen,mobile}){
+  const alb=ALBUMS.find(a=>a.id===albumId);
+  const items=ITEMS.filter(i=>i.album===albumId);
+  const cols=mobile?2:3;
+  return(
+    <div style={{flex:1,display:'flex',flexDirection:'column',animation:'slideInRight 0.25s ease',overflow:'hidden'}}>
+      {/* Album hero */}
+      <div style={{height:mobile?120:160,background:GR[alb.g],position:'relative',flexShrink:0,overflow:'hidden'}}>
+        <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom,rgba(0,0,0,0.2) 0%,rgba(0,0,0,0.65) 100%)'}}/>
+        <div style={{position:'absolute',inset:0,padding:mobile?'14px 16px':'18px 22px',display:'flex',flexDirection:'column',justifyContent:'flex-end'}}>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:mobile?22:28,textTransform:'uppercase',letterSpacing:'0.03em',color:WHI,lineHeight:1.1,textShadow:'0 2px 12px rgba(0,0,0,0.7)',marginBottom:4}}>{alb.name}</div>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <span style={{background:BLK,borderRadius:5,padding:'2px 10px',fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:800,color:ORA,letterSpacing:'0.06em'}}>{alb.date}</span>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.65)',letterSpacing:'0.05em'}}>{alb.count} MOMENTS</span>
+          </div>
+        </div>
+        {/* Download all */}
+        <button style={{position:'absolute',top:mobile?12:16,right:mobile?12:16,background:'rgba(0,0,0,0.55)',backdropFilter:'blur(8px)',color:WHI,border:'1px solid rgba(255,255,255,0.2)',borderRadius:22,padding:'7px 14px',fontFamily:"'Barlow Condensed',sans-serif",fontSize:12,fontWeight:900,letterSpacing:'0.06em',display:'flex',alignItems:'center',gap:5,cursor:'pointer',textTransform:'uppercase',minHeight:36}}>
+          <Ico n="download" s={13} c="#fff"/>ALL
+        </button>
+      </div>
+      {/* Grid */}
+      <div style={{flex:1,overflowY:'auto',padding:mobile?'10px 12px 0':'12px 20px 0'}}>
+        <div style={{columns:cols,columnGap:mobile?8:10}}>
+          {items.map(item=><GridCard key={item.id} item={item} onOpen={onOpen} selected={false} onSelect={()=>{}} bulk={false}/>)}
+        </div>
+        <div style={{height:mobile?100:60}}/>
+      </div>
+    </div>
+  );
+}
+
+function InfoScreen({mobile}){
+  const info=[
+    {icon:'camera',label:'PHOTOS & VIDEOS',sub:'Upload original quality — nothing gets compressed'},
+    {icon:'github',label:'STORED ON GITHUB',sub:'eugineous/urbang-gang-photos · always available'},
+    {icon:'share',label:'EASY SHARING',sub:'Share the link · anyone can view and download'},
+    {icon:'albums',label:'ORGANISED BY SCHOOL',sub:'Every tour stop gets its own album'},
+  ];
+  return(
+    <div style={{flex:1,overflowY:'auto',padding:mobile?'20px 16px 0':'24px 24px 0'}}>
+      {/* Logo block */}
+      <div style={{textAlign:'center',marginBottom:30}}>
+        <img src="uploads/URBAN GANG TOUR OFFICIAL LOGO.png" style={{height:80,width:'auto',marginBottom:12}} alt="Urban Gang"/>
+        <div style={{fontFamily:"'Lilita One',cursive",fontSize:22,color:T,marginBottom:4}}>
+          <span style={{color:ORA}}>GANG</span> MOMENTS
+        </div>
+        <div style={{fontSize:13,color:TM,maxWidth:280,margin:'0 auto',lineHeight:1.5}}>
+          The official media archive for every Urban Gang Tour school visit.
+        </div>
+      </div>
+
+      {/* Feature list */}
+      <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:24}}>
+        {info.map((item,i)=>(
+          <div key={i} style={{background:S2,borderRadius:12,padding:'14px 16px',display:'flex',alignItems:'center',gap:14,border:'1px solid rgba(255,255,255,0.05)'}}>
+            <div style={{width:40,height:40,borderRadius:10,background:`linear-gradient(135deg,${PINK}33,${ORA}22)`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <Ico n={item.icon} s={18} c={PINK}/>
+            </div>
+            <div>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:13,letterSpacing:'0.06em',color:T,marginBottom:2}}>{item.label}</div>
+              <div style={{fontSize:11,color:TM,lineHeight:1.4}}>{item.sub}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* GitHub status */}
+      <div style={{background:S2,borderRadius:12,padding:'14px 16px',border:'1px solid rgba(123,45,139,0.3)',display:'flex',alignItems:'center',gap:12,marginBottom:24}}>
+        <div style={{width:8,height:8,borderRadius:'50%',background:'#4CAF50',flexShrink:0,animation:'pulse 2s ease infinite'}}/>
+        <div>
+          <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:12,letterSpacing:'0.06em',color:'#CC80FF',marginBottom:2}}>GITHUB CONNECTED</div>
+          <div style={{fontFamily:'monospace',fontSize:10,color:'rgba(204,128,255,0.6)'}}>eugineous/urbang-gang-photos</div>
+        </div>
+      </div>
+
+      <div style={{height:mobile?100:60}}/>
+    </div>
+  );
+}
+
+/* ─── BOTTOM NAV ─── */
+function BottomNav({tab,setTab,onUpload,mobile}){
+  const tabs=[
+    {id:'home',   label:'Moments', icon:'home'},
+    {id:'albums', label:'Albums',  icon:'albums'},
+    {id:'upload', label:'Upload',  icon:'upload'},
+    {id:'info',   label:'Info',    icon:'info'},
+  ];
+  return(
+    <div style={{
+      flexShrink:0,background:S1,
+      borderTop:'1px solid rgba(255,255,255,0.07)',
+      display:'flex',
+      paddingBottom:'env(safe-area-inset-bottom)',
+    }}>
+      {tabs.map(t=>{
+        const active=t.id===tab;
+        const isUp=t.id==='upload';
+        return(
+          <button key={t.id} onClick={()=>isUp?onUpload():setTab(t.id)} style={{
+            flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+            padding:'10px 0 8px',gap:4,
+            color: isUp?WHI:active?PINK:TD,
+            background:isUp?`linear-gradient(135deg,${PINK},${ORA})`:'transparent',
+            position:'relative',
+            transition:'color 0.15s',
+            minHeight:56,
+          }}>
+            <Ico n={t.icon} s={22} c={isUp?WHI:active?PINK:TD}/>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,fontWeight:900,letterSpacing:'0.1em',textTransform:'uppercase',lineHeight:1}}>
+              {t.label}
+            </span>
+            {active&&!isUp&&(
+              <div style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',width:24,height:2.5,background:PINK,borderRadius:'0 0 2px 2px'}}/>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── APP ─── */
+function App(){
+  const bp=useBP();
+  const [splash,setSplash]=useState(true);
+  const [tab,setTab]=useState('home');
+  const [albumId,setAlbumId]=useState(null);
+  const [lbIdx,setLbIdx]=useState(null);
+  const [lbItems,setLbItems]=useState([]);
+  const [uploadOpen,setUploadOpen]=useState(false);
+  const [selected,setSelected]=useState(new Set());
+  const [bulk,setBulk]=useState(false);
+  const [toasts,setToasts]=useState([]);
+
+  const addToast=(msg,type='success')=>{const id=Date.now();setToasts(t=>[...t,{id,msg,type}]);setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),3000);};
+
+  const openLb=(item,pool)=>{
+    const arr=pool||ITEMS;
+    setLbItems(arr);
+    setLbIdx(arr.findIndex(x=>x.id===item.id));
+  };
+  const toggleSel=id=>{setSelected(p=>{const n=new Set(p);n.has(id)?n.delete(id):n.add(id);return n;});};
+  const bulkDL=()=>{addToast(`Preparing ${selected.size} files…`,'info');setTimeout(()=>{addToast(`${selected.size} files downloaded as ZIP!`);setSelected(new Set());setBulk(false);},2000);};
+
+  const openAlbum=alb=>{setAlbumId(alb.id);setTab('albums');};
+
+  /* Desktop: show columns 4 on home */
+  const homeItems=useMemo(()=>ITEMS,[]);
+
+  const renderScreen=()=>{
+    if(tab==='home') return <HomeScreen onOpen={i=>openLb(i,homeItems)} selected={selected} onSelect={toggleSel} bulk={bulk} mobile={bp.mobile}/>;
+    if(tab==='albums'&&albumId) return <AlbumDetailScreen albumId={albumId} onBack={()=>setAlbumId(null)} onOpen={i=>openLb(i,ITEMS.filter(x=>x.album===albumId))} mobile={bp.mobile}/>;
+    if(tab==='albums') return <AlbumsScreen onOpenAlbum={openAlbum} mobile={bp.mobile}/>;
+    if(tab==='info') return <InfoScreen mobile={bp.mobile}/>;
+    return null;
+  };
+
+  /* Determine screen title */
+  const screenTitle=()=>{
+    if(tab==='home') return null; // logo used instead
+    if(tab==='albums'&&albumId){
+      const alb=ALBUMS.find(a=>a.id===albumId);
+      return alb?.name;
+    }
+    if(tab==='albums') return 'Albums';
+    if(tab==='info') return 'Info';
+    return null;
+  };
+
+  return(
+    <>
+      {splash&&<Splash onDone={()=>setSplash(false)}/>}
+      <div style={{display:'flex',flexDirection:'column',height:'100dvh',background:BG,overflow:'hidden',opacity:splash?0:1,transition:'opacity 0.4s ease'}}>
+
+        {/* ── APP HEADER ── */}
+        <div style={{
+          flexShrink:0,background:S1,
+          borderBottom:'1px solid rgba(255,255,255,0.07)',
+          padding:`calc(12px + env(safe-area-inset-top)) ${bp.mobile?14:20}px 0`,
+          paddingBottom:0,
+          position:'relative',zIndex:10,
+        }}>
+          <div style={{display:'flex',alignItems:'center',height:50,gap:12}}>
+            {/* Back button */}
+            {tab==='albums'&&albumId?(
+              <button onClick={()=>setAlbumId(null)} style={{width:40,height:40,display:'flex',alignItems:'center',justifyContent:'center',color:T,flexShrink:0}}>
+                <Ico n="back" s={22}/>
+              </button>
+            ):(
+              <img src="uploads/URBAN GANG TOUR OFFICIAL LOGO.png" style={{height:32,width:'auto',flexShrink:0}} alt="Urban Gang"/>
+            )}
+
+            {/* Title */}
+            {tab==='home'?(
+              <div style={{display:'flex',alignItems:'center',gap:5}}>
+                <span style={{fontFamily:"'Lilita One',cursive",fontSize:16,color:ORA}}>GANG</span>
+                <span style={{fontFamily:"'Lilita One',cursive",fontSize:16,color:T}}>MOMENTS</span>
+              </div>
+            ):(
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:18,letterSpacing:'0.04em',textTransform:'uppercase',color:T,flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                {screenTitle()}
+              </div>
+            )}
+
+            {/* Right actions */}
+            <div style={{marginLeft:'auto',display:'flex',gap:6,alignItems:'center',flexShrink:0}}>
+              {/* Bulk toggle (home only) */}
+              {tab==='home'&&(
+                <button onClick={()=>{setBulk(!bulk);if(bulk)setSelected(new Set());}} style={{background:bulk?'rgba(196,23,138,0.2)':'rgba(255,255,255,0.05)',border:`1px solid ${bulk?'rgba(196,23,138,0.4)':'rgba(255,255,255,0.1)'}`,borderRadius:20,padding:'5px 12px',color:bulk?PINK:TD,fontFamily:"'Barlow Condensed',sans-serif",fontSize:10,fontWeight:900,letterSpacing:'0.08em',textTransform:'uppercase',minHeight:32}}>
+                  {bulk?`${selected.size} SEL.`:'SELECT'}
+                </button>
+              )}
+              {/* GitHub dot */}
+              <div style={{width:8,height:8,borderRadius:'50%',background:'#4CAF50',boxShadow:'0 0 6px rgba(76,175,80,0.6)'}}/>
+            </div>
+          </div>
+        </div>
+
+        {/* ── SCREEN ── */}
+        <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          {renderScreen()}
+        </div>
+
+        {/* ── BULK BAR ── */}
+        {bulk&&selected.size>0&&(
+          <div style={{
+            position:'absolute',bottom:bp.mobile?75:70,left:'50%',transform:'translateX(-50%)',
+            background:S2,border:`1px solid rgba(196,23,138,0.4)`,
+            borderRadius:14,padding:'10px 16px',
+            display:'flex',alignItems:'center',gap:12,
+            boxShadow:'0 8px 36px rgba(0,0,0,0.7)',animation:'fadeUp 0.2s ease',zIndex:500,whiteSpace:'nowrap',
+          }}>
+            <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontWeight:900,fontSize:13,letterSpacing:'0.04em'}}>{selected.size} SELECTED</span>
+            <button onClick={bulkDL} style={{background:`linear-gradient(90deg,${PINK},${ORA})`,color:WHI,border:'none',borderRadius:9,padding:'7px 14px',fontFamily:"'Barlow Condensed',sans-serif",fontSize:12,fontWeight:900,cursor:'pointer',display:'flex',alignItems:'center',gap:4,letterSpacing:'0.06em',textTransform:'uppercase',minHeight:36}}>
+              <Ico n="zip" s={12} c="#fff"/>ZIP
+            </button>
+            <button onClick={()=>{setSelected(new Set());setBulk(false);}} style={{color:TD,fontSize:12,cursor:'pointer',minWidth:36,minHeight:36,display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+          </div>
+        )}
+
+        {/* ── BOTTOM NAV ── */}
+        <BottomNav tab={tab} setTab={t=>{setTab(t);if(t!=='albums')setAlbumId(null);}} onUpload={()=>setUploadOpen(true)} mobile={bp.mobile}/>
+
+        {/* ── MODALS ── */}
+        {uploadOpen&&<UploadSheet onClose={()=>setUploadOpen(false)} onDone={()=>addToast('Pushed to GitHub!')} mobile={bp.mobile}/>}
+        {lbIdx!==null&&<Lightbox items={lbItems} idx={Math.max(0,Math.min(lbIdx,lbItems.length-1))} onClose={()=>setLbIdx(null)} onNav={d=>setLbIdx(i=>Math.max(0,Math.min(lbItems.length-1,i+d)))} mobile={bp.mobile}/>}
+
+        {/* ── TOASTS ── */}
+        <div style={{position:'fixed',bottom:bp.mobile?80:20,left:'50%',transform:'translateX(-50%)',zIndex:9999,display:'flex',flexDirection:'column',gap:8,alignItems:'center'}}>
+          {toasts.map(t=>(
+            <div key={t.id} style={{background:t.type==='success'?PINK:t.type==='info'?S3:'#900',color:WHI,padding:'10px 18px',borderRadius:24,fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:800,letterSpacing:'0.05em',display:'flex',alignItems:'center',gap:8,animation:'toastSlide 0.25s ease',boxShadow:'0 6px 24px rgba(0,0,0,0.5)',whiteSpace:'nowrap'}}>
+              {t.type==='success'&&<Ico n="check" s={13} c="#fff"/>}{t.msg}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
