@@ -50,7 +50,7 @@ jobs:
             total="$(jq -r '.totalChunks' "$manifest")"
             createdAt="$(jq -r '.createdAt' "$manifest")"
 
-            safe_album="$(echo "$album" | tr -cs 'a-zA-Z0-9._-' '_' | cut -c1-80)"
+            safe_album="$(echo "$album" | tr -cs 'a-zA-Z0-9._-' '_' | cut -c1-120)"
             safe_file="$(echo "$filename" | tr -cs 'a-zA-Z0-9._-' '_' | cut -c1-120)"
 
             out="release-${safe_album}--${createdAt}--${safe_file}"
