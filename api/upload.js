@@ -1,18 +1,28 @@
 // Urban Gang Moments — Upload Handler
 // Receives a base64-encoded file, pushes it to GitHub
 
+import { applyCors, rejectIfBlocked, isAllowedMedia } from './_security.js';
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  applyCors(req, res);
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (rejectIfBlocked(req, res)) return;
 
   const { filename, content, album, title, fileType } = req.body;
 
   if (!filename || !content || !album) {
     return res.status(400).json({ error: 'Missing required fields: filename, content, album' });
+  }
+
+  if (!isAllowedMedia(fileType, filename)) {
+    return res.status(415).json({ error: 'Unsupported file type' });
+  }
+
+  // content is base64; ~4/3 expansion, cap decoded size around 50MB
+  if (typeof content !== 'string' || content.length > 68_000_000) {
+    return res.status(413).json({ error: 'File too large' });
   }
 
   const token = process.env.GITHUB_TOKEN;

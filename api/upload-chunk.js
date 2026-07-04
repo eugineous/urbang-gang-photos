@@ -2,6 +2,8 @@
 // Receives small base64 chunks and stores them in GitHub under /chunks/<uploadId>/
 // A GitHub Action then assembles them and uploads the final file to GitHub Releases.
 
+import { applyCors, rejectIfBlocked, isAllowedMedia } from './_security.js';
+
 const OWNER = 'eugineous';
 const REPO = 'urbang-gang-photos';
 const RELEASE_TAG = 'ugc';
@@ -14,12 +16,11 @@ function safeSegment(value) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  applyCors(req, res);
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (rejectIfBlocked(req, res)) return;
 
   const token = process.env.GITHUB_TOKEN;
   if (!token) return res.status(500).json({ error: 'GitHub token not configured' });
@@ -39,6 +40,10 @@ export default async function handler(req, res) {
 
   if (!uploadId || !album || !filename) {
     return res.status(400).json({ error: 'Missing required fields: uploadId, album, filename' });
+  }
+
+  if (!finalize && !isAllowedMedia(fileType, filename)) {
+    return res.status(415).json({ error: 'Unsupported file type' });
   }
 
   const idx = Number(chunkIndex);
